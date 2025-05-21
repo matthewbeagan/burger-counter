@@ -2,6 +2,17 @@ from flask import Flask, request
 import gspread
 from google.oauth2.service_account import Credentials
 
+import requests
+
+# Your Square Access Token
+SQUARE_ACCESS_TOKEN = "EAAAlhJMyWPaslffhdKWs03uHpUkmzR3geyBCzIqNFIP6lKeAhAbtz0PHrnZyaBV"
+SQUARE_API_BASE = "https://connect.squareup.com/v2"
+HEADERS = {
+    "Authorization": f"Bearer {SQUARE_ACCESS_TOKEN}",
+    "Content-Type": "application/json",
+    "Square-Version": "2025-04-16"
+}
+
 app = Flask(__name__)
 
 # Google Sheets setup
