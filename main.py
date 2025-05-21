@@ -6,11 +6,17 @@ app = Flask(__name__)
 
 # Google Sheets setup
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-import base64
 import os
+import json
+import base64
 
+# Decode the service account from the env variable
 creds_json = base64.b64decode(os.environ['GOOGLE_CREDS_B64']).decode()
-creds = Credentials.from_service_account_info(json.loads(creds_json), scopes=SCOPES)
+creds_dict = json.loads(creds_json)
+
+# Now authorize with in-memory credentials
+creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+
 client = gspread.authorize(creds)
 sheet = client.open("Burger Counter").sheet1
 
