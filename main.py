@@ -5,7 +5,10 @@ from google.oauth2.service_account import Credentials
 app = Flask(__name__)
 
 # Google Sheets setup
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+SCOPES = [
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/drive'
+]
 import os
 import json
 import base64
