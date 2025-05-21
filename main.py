@@ -35,6 +35,19 @@ client = gspread.authorize(creds)
 sheet = client.open("Burger Counter").sheet1
 
 @app.route('/webhook', methods=['POST'])
+
+def get_category_id_for_item(item_id):
+    url = f"{SQUARE_API_BASE}/catalog/object/{item_id}"
+    response = requests.get(url, headers=HEADERS)
+    
+    if response.status_code == 200:
+        obj = response.json().get("object", {})
+        item_data = obj.get("item_data", {})
+        return item_data.get("category_id")
+    else:
+        print(f"Failed to fetch catalog object {item_id}")
+        return None
+
 def square_webhook():
     data = request.get_json()
     
