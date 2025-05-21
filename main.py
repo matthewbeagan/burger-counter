@@ -1,11 +1,16 @@
 from flask import Flask, request
+import os
+import json
+import base64
 import gspread
+import requests
 from google.oauth2.service_account import Credentials
 
-import requests
+app = Flask(__name__)
 
-# Your Square Access Token
+# --- Square API Setup ---
 SQUARE_ACCESS_TOKEN = "EAAAlhJMyWPaslffhdKWs03uHpUkmzR3geyBCzIqNFIP6lKeAhAbtz0PHrnZyaBV"
+BURGER_CATEGORY_ID = "UNPZDJDG35325CJW6E6ZZAAU"
 SQUARE_API_BASE = "https://connect.squareup.com/v2"
 HEADERS = {
     "Authorization": f"Bearer {SQUARE_ACCESS_TOKEN}",
@@ -13,64 +18,57 @@ HEADERS = {
     "Square-Version": "2025-04-16"
 }
 
-app = Flask(__name__)
-
-# Google Sheets setup
+# --- Google Sheets Setup ---
 SCOPES = [
-    'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive'
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
 ]
-import os
-import json
-import base64
 
-# Decode the service account from the env variable
-creds_json = base64.b64decode(os.environ['GOOGLE_CREDS_B64']).decode()
+# Load credentials from environment variable (base64-encoded JSON)
+creds_json = base64.b64decode(os.environ["GOOGLE_CREDS_B64"]).decode()
 creds_dict = json.loads(creds_json)
-
-# Now authorize with in-memory credentials
 creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
 
-client = gspread.authorize(creds)
-sheet = client.open("Burger Counter").sheet1
+# Connect to Google Sheet
+gc = gspread.authorize(creds)
+SHEET_ID = "YOUR_SHEET_ID_HERE"  # Use open_by_key to avoid needing Drive API
+sheet = gc.open_by_key(SHEET_ID).sheet1
 
-@app.route('/webhook', methods=['POST'])
 
+# --- Helper: Get Category ID for a Catalog Item ---
 def get_category_id_for_item(item_id):
     url = f"{SQUARE_API_BASE}/catalog/object/{item_id}"
     response = requests.get(url, headers=HEADERS)
-    
+
     if response.status_code == 200:
         obj = response.json().get("object", {})
         item_data = obj.get("item_data", {})
         return item_data.get("category_id")
     else:
-        print(f"Failed to fetch catalog object {item_id}")
+        print(f"Failed to fetch catalog item {item_id}: {response.status_code}")
         return None
 
+
+# --- Webhook Endpoint ---
+@app.route("/webhook", methods=["POST"])
 def square_webhook():
     data = request.get_json()
-    
+    print("Webhook received:", json.dumps(data, indent=2))
+
     try:
         order = data.get("data", {}).get("object", {}).get("order", {})
         items = order.get("line_items", [])
+
         burger_count = 0
 
         for item in items:
-            if "burger" in item.get("name", "").lower():
-                burger_count += int(item.get("quantity", 0))
+            quantity = int(item.get("quantity", 0))
+            item_id = item.get("catalog_object_id")
+
+            if item_id:
+                category_id = get_category_id_for_item(item_id)
+                if category_id == BURGER_CATEGORY_ID:
+                    burger_count += quantity
 
         if burger_count > 0:
-            current = int(sheet.acell("A2").value)
-            sheet.update("A2", current + burger_count)
-
-        return "OK", 200
-    except Exception as e:
-        print(f"Error: {e}")
-        return "Error", 500
-
-@app.route('/', methods=['GET'])
-def home():
-    return "Webhook is running!", 200
-
-app.run(host='0.0.0.0', port=8080)
+            current = int(sheet.acell("
