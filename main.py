@@ -31,7 +31,7 @@ creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
 
 # Connect to Google Sheet
 gc = gspread.authorize(creds)
-SHEET_ID = "YOUR_SHEET_ID_HERE"  # Use open_by_key to avoid needing Drive API
+SHEET_ID = "1fjbrsudBew-6XcYL9b7wdj7WliSPniTjOTFKeFcnMB8"  # Use open_by_key to avoid needing Drive API
 sheet = gc.open_by_key(SHEET_ID).sheet1
 
 
