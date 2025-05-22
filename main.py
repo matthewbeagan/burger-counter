@@ -71,4 +71,24 @@ def square_webhook():
                     burger_count += quantity
 
         if burger_count > 0:
-            current = int(sheet.acell("
+            current = int(sheet.acell("A2").value)
+            sheet.update("A2", current + burger_count)
+                        print(f"Updated counter: +{burger_count} → total: {current + burger_count}")
+                    else:
+                        print("No burger items found in order.")
+            
+                    return "OK", 200
+            
+                except Exception as e:
+                    print(f"Error processing webhook: {e}")
+                    return "Error", 500
+            
+            
+# --- Basic Ping Endpoint ---
+@app.route("/", methods=["GET"])
+def home():
+    return "Burger Counter Webhook is running!", 200
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
