@@ -79,9 +79,9 @@ def square_webhook():
             
             return "OK", 200
             
-        except Exception as e:
-            print(f"Error processing webhook: {e}")
-            return "Error", 500
+    except Exception as e:
+        print(f"Error processing webhook: {e}")
+        return "Error", 500
             
             
 # --- Basic Ping Endpoint ---
